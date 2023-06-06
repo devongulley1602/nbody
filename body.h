@@ -7,7 +7,6 @@
  * A node data element to represent a physical point mass in a 3-d space
  * Can also be used to represent a centre of mass for its subnodes to be implemented in <system.h>::System
  *
- *
  * Constructor Body:
  * 	Creates a point object based off of an initial mass, position, and velocity
  *
@@ -56,10 +55,9 @@ class Body {
 		//The width of the octant in whcih a particular body occupies
 		double domain;
 	public:
-		//Properties of the object
-		double startingMass, mass,position[3],velocity[3];
+		double startingMass, mass,position[3],velocity[3]; //Properties of the object
 		Body *subnode[8];//subnodes on the Barnes-Hutt tree structure for each octant
-		static double cutoffDistance;//proximity in which the force between bodies is set 0 to avoid singularities
+		double cutoffDistance;//proximity in which the force between bodies is set 0 to avoid singularities
 		bool isExternal; //true when the body is not a representation of other bodies in space
 
 
@@ -73,7 +71,7 @@ class Body {
 		 * @params _velocity[3]
 		 *
 		 */
-		Body (double _mass=0, double _position[3]={},double _velocity[3]={}) {
+		Body (double _mass=0, double *_position=NULL,double *_velocity=NULL) {
 			initialiseBody(_mass,_position,_velocity);		
 		}
 
@@ -88,21 +86,25 @@ class Body {
 		 * Sets the initial values of the body while maintaining its current state in the sytem such
 		 * Should be called each time the force is updated or when the system tree is rebuilt
 		 */
-		void initialiseBody (double _mass, double _position[3],double _velocity[3]) {
-			cutoffDistance = 0.0001;
+		void initialiseBody (double _mass, double *_position,double *_velocity) {
+			cutoffDistance = 0.001;
 			domain = 1.000000 ;//the side length of the default octant (i.e. 1.0)
 			startingMass = _mass;
 			mass = _mass;
-			for (int i = 0 ; i<3;i++){
-				position[i] = _position[i];
-				velocity[i] = _velocity[i];
+			
+			isExternal = (_position && _velocity); //on initialisation internal nodes will not have an initial velocity or position
+
+			if(isExternal){//internal nodes are fine to have garbage values for position and velocity
+				for (int i = 0 ; i<3;i++){
+					position[i] = _position[i];
+					velocity[i] = _velocity[i];
+				}
 			}
 			
 			//On initialisation/reset of the system tree, all subnodes of a given body are unlinked in memory
 			for(int i = 0 ; i < 8 ; i++){
 				subnode[i] = NULL;
 			}
-			isExternal = true;
 		}
 
 
@@ -129,7 +131,7 @@ class Body {
 			double R_sq = 0;
 			//Computing Pythagoras' theorem for each axis
 			for (int i = 0;i<3;i++){
-				R_sq += pow(2,position[i] - b.position[i]);
+				R_sq += pow(position[i] - b.position[i],2);
 			}
 			return R_sq;
 		}
@@ -185,7 +187,7 @@ class Body {
 		void forceOn(Body b,double (&F)[3]){//a proportional force which the program driver can scale appropriately
 			for (int i = 0; i<3; i++){
 				//the force projection onto each axis
-				F[i] =(position[i]-b.position[i])*mass*b.mass/(distanceSquaredTo(b)*pow(0.5,distanceSquaredTo(b)));
+				F[i] =((position[i]-b.position[i])*mass*b.mass)/(distanceSquaredTo(b)*pow(distanceSquaredTo(b),0.5));
 			}
 		}
 		
