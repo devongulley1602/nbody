@@ -30,17 +30,18 @@
 class System {
 
 	public:
-		//The topmost node in the system tree to represent the space of all values below it
-		Body headNode;
-
 		/* 
 		 * The Barnes-Hutt theta criterion set by the system (typically 0.5) 
 		 * The ratio of the domain of an internal node to the distance it is from a body	
 		 */
 		double theta;
+
+		Body head;
 		
 		System (double _theta=0.5){
 			theta = _theta;
+			head = Body(0);
+			head.isExternal = true;
 		};
 		/*
 		 * addBarnesHutt:
@@ -57,38 +58,49 @@ class System {
 	   *	
 	   *	This will create the 3d Barnes-Hutt tree each calculation of the forces during an iteration of the Verlet algorithm.
 	   */
-		Body *addBarnesHutt(Body* body, Body* node = NULL){
-				Body* newNode; 
+		Body* addBarnesHutt(Body* body, Body* node = NULL){
+			cout <<"\n\n---------------------------------------\nbody: "<<body << "\n" ;
+			(*body).print() ;
+			cout << "node: "<< node<< "\n";
+ 			//(*node).print();	
 
-				//Insertion of the body into the newNode if the node doesn't exist
-				if(node == NULL){
-					newNode=body;
-				}else{ //the node exists already
-					
+			//Insertion of the body into the newNode if the node doesn't exist
+			if(node == NULL){
+				cout << "\nnode is null, adding body to null node\n";
+				node= body;//base case
+				cout << "node now is: " <<node <<"\n";
+			}else{ //the node exists already
+				cout<<"\nnode exists, adding body to subnode\n";
+
 					//Determine if the node is internal or external, this is the only case in the program since instantiation, addition of a subnode, or a reset of the Barnes Hutt tree where this value should change
-					for(int i = 0 ; i< 8 ; i++){
-						if((*node).subnode[i] != NULL) {(*node).isExternal = false;}
-					}
+				for(int i = 0 ; i< 8 ; i++){
+					if((*node).subnode[i] != NULL) {(*node).isExternal = false;}
+				}
 
-					//If it external (has no subnode) then there are two bodies conflicting for the same node, they must be added as subnode to the current 
-					if((*node).isExternal){
-						//copy of the original body node placed here but without its subnodes
-						*newNode = Body((*node).startingMass,(*node).position,(*node).velocity) ;
-						int newNodeOctant = (*node).nextOctant();
-						(*node).isExternal = false;//we only need set a node to internal if it has any subnodes
-						(*node).subnode[newNodeOctant] = addBarnesHutt(newNode,(*node).subnode[newNodeOctant]);
-						(*node).updateCentreOfMass(); 
-					}else{ //it is internal (has a subnode) so the newNode can become the node which was passed into the function (base case) 
-						newNode = node;
-					}
+				Body *newNode = node;
 
-					(*newNode).mass += (*body).mass;//the mass of the system below this node increases by the body being added
-					int octant = (*body).nextOctant();//determine where the octant that the new body at this depth should be inserted
-					(*newNode).subnode[octant] = addBarnesHutt(body,(*node).subnode[octant]); //adds the body to be a subnode of the node
+					//If the node is external (has no subnode) then there are two bodies conflicting for the same node, they must be added as subnode to the current 
+				if((*node).isExternal && node != &head){
 
-				}	
-				
-				return newNode;
+					Body superNode = *node;
+					newNode = &superNode;
+					int nextOctant = (*node).nextOctant();
+					
+					cout<<"\nnode is external and also a body, creating new node and adding that to octant: "<< nextOctant<< " as well\n";
+					(*newNode).subnode[nextOctant] = addBarnesHutt(node,superNode.subnode[nextOctant]);
+				}
+
+
+				(*newNode).mass += (*body).mass;//the mass of the system below this node increases by the body being added
+				int octant = (*body).nextOctant();//determine where the octant that the new body at this depth should be inserted
+
+				cout <<"\nadding body as subnode into octant: "<<octant<<" for node "<<  newNode << "\n";
+				(*newNode).subnode[octant] = addBarnesHutt(body,(*newNode).subnode[octant]); //adds the body to be a subnode of the node
+				(*newNode).updateCentreOfMass();
+				node = (*newNode).subnode[octant];
+			}
+			cout<<"\n==========RETURNS==========\n"<<node<<"\n==========================\n\n";
+			return node;
 		};
 		
 

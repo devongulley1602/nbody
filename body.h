@@ -54,6 +54,8 @@ class Body {
 	protected:
 		//The width of the octant in whcih a particular body occupies
 		double domain;
+		double relativePosition[3];
+
 	public:
 		double startingMass, mass,position[3],velocity[3]; //Properties of the object
 		Body *subnode[8];//subnodes on the Barnes-Hutt tree structure for each octant
@@ -92,15 +94,22 @@ class Body {
 			startingMass = _mass;
 			mass = _mass;
 			
-			isExternal = (_position && _velocity); //on initialisation internal nodes will not have an initial velocity or position
-
-			if(isExternal){//internal nodes are fine to have garbage values for position and velocity
 				for (int i = 0 ; i<3;i++){
-					position[i] = _position[i];
-					velocity[i] = _velocity[i];
-				}
-			}
-			
+
+					if(_position){
+						position[i] = _position[i];
+					}else{
+						position[i] = 0;
+					}
+
+					if(_velocity){
+						velocity[i] = _velocity[i];
+					}else{
+						velocity[i] = 0;
+					}
+
+					relativePosition[i] = position[i];
+			}			
 			//On initialisation/reset of the system tree, all subnodes of a given body are unlinked in memory
 			for(int i = 0 ; i < 8 ; i++){
 				subnode[i] = NULL;
@@ -140,6 +149,10 @@ class Body {
 	  // @property Domain 
 		double Domain(){
 			return domain;
+		}
+
+		void SetDomain(double _domain) {
+			domain = _domain;
 		}
 
 		
@@ -206,9 +219,18 @@ class Body {
 
 			//In each dimension i, we determine the octant in which the particle is in based off the size of the domain
 			for (int i = 0; i<3; i++){
-				double relativePosition = (position[i])/domain;
-				octantIndex += (relativePosition>domain) *pow(2,i); //the octant from 0 to 7 corresponding to if the relativePosition is greater or less than 1 on half of the new domain  	
+				
+
+
+
+
+
+				bool octantBit = (relativePosition[i]/domain > 1);
+				octantIndex += octantBit *pow(2,i); //the octant from 0 to 7 corresponding to if the relativePosition is greater or less than 1 on half of the new domain  	
+				relativePosition[i] += octantBit*domain;
+				cout<< "relativeposition ["<<i<<"]: "<<relativePosition[i]<<"\n";
 			}
+			cout<<"\nOCTANTINDEX: " << octantIndex;
 			return octantIndex;
 		}
 		
@@ -227,8 +249,13 @@ class Body {
 		 *  Sends to std::cout a printout of properties including mass, position[3] values, and velocity[3] values 
 		 */
 		void print() {
-			std::cout << "Mass: "<< mass << "\nPosition: ("<<position[0]<<","<< position[1]<< "," << position[2] << ")\nVelocity: ("<<velocity[0]<<","<< velocity[1]<< "," << velocity[2] << ")\n\n";
-
-		}
+			cout << "\nMemory Location: " << this << "\n";
+			cout << "\nDomain: " << domain << "\n";
+			if(position[1] && velocity[1]){
+				cout << "Mass: "<< mass << "\nPosition: ("<<position[0]<<","<< position[1]<< "," << position[2] << ")\nVelocity: ("<<velocity[0]<<","<< velocity[1]<< "," << velocity[2] << ")\n\n";
+			}else{
+				cout <<"Mass: " <<mass<<"\n";
+			}
+			}
 };
 
