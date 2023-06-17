@@ -62,7 +62,6 @@ class Body {
 		double cutoffDistance;//proximity in which the force between bodies is set 0 to avoid singularities
 		bool isExternal; //true when the body is not a representation of other bodies in space
 
-
 		/*
 		 * Constructor for the Body class
 		 *
@@ -89,6 +88,7 @@ class Body {
 		 * Should be called each time the force is updated or when the system tree is rebuilt
 		 */
 		void initialiseBody (double _mass, double *_position,double *_velocity) {
+
 			cutoffDistance = 0.001;
 			domain = 1.000000 ;//the side length of the default octant (i.e. 1.0)
 			startingMass = _mass;
@@ -132,7 +132,7 @@ class Body {
 	
 		/* 
 		 * distanceSquaredTo:
-		 * 	Returns the Euclidean distance to another body b
+		 * 	Returns the Euclidean squared distance to another body b as a fraction of the original domain
 		 *
 		 * @params b
 		 */
@@ -212,25 +212,28 @@ class Body {
 		 * 	Returns the index of the appropriate octant as octantIndex
 		 */
 		double nextOctant () {
+		
+			if(domain ==1){
+				for (int i =0; i<3; i++){
+					relativePosition[i] = position[i];
+				}
+			}
+
+
+
 			//Divide the domain in half on each axis, positions outside this will be placed in the appropriate octant
 			domain *= 0.5;
 
-			int octantIndex = 0;
+			double octantIndex = 0;
 
 			//In each dimension i, we determine the octant in which the particle is in based off the size of the domain
 			for (int i = 0; i<3; i++){
-				
-
-
-
-
-
-				bool octantBit = (relativePosition[i]/domain > 1);
-				octantIndex += octantBit *pow(2,i); //the octant from 0 to 7 corresponding to if the relativePosition is greater or less than 1 on half of the new domain  	
-				relativePosition[i] += octantBit*domain;
-				cout<< "relativeposition ["<<i<<"]: "<<relativePosition[i]<<"\n";
+				double bit = (relativePosition[i]/domain > 1);
+				relativePosition[i] -= bit*domain;
+				octantIndex += bit *pow(2,i); //the octant from 0 to 7 corresponding to if the relativePosition is greater or less than 1 on half of the new 
+				cout<< "relativeposition["<<i<<"]/domain: "<<relativePosition[i]<<"/"<<domain<<" = "<< relativePosition[i]/domain<< "---> bit: "<<bit<< "\n";
 			}
-			cout<<"\nOCTANTINDEX: " << octantIndex;
+			//cout<<"\nOCTANTINDEX: " << octantIndex;
 			return octantIndex;
 		}
 		
@@ -249,7 +252,7 @@ class Body {
 		 *  Sends to std::cout a printout of properties including mass, position[3] values, and velocity[3] values 
 		 */
 		void print() {
-			cout << "\nMemory Location: " << this << "\n";
+			cout << "\nMemory Location: " << this;
 			cout << "\nDomain: " << domain << "\n";
 			if(position[1] && velocity[1]){
 				cout << "Mass: "<< mass << "\nPosition: ("<<position[0]<<","<< position[1]<< "," << position[2] << ")\nVelocity: ("<<velocity[0]<<","<< velocity[1]<< "," << velocity[2] << ")\n\n";

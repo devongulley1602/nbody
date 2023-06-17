@@ -36,13 +36,16 @@ class System {
 		 */
 		double theta;
 
-		Body head;
+		Body* head;
 		
 		System (double _theta=0.5){
 			theta = _theta;
-			head = Body(0);
-			head.isExternal = true;
+			head = new Body;
 		};
+
+		void add(Body &body){
+			addBarnesHutt(&body,head);
+		}
 		/*
 		 * addBarnesHutt:
 		 *	Builds the Barnes-Hutt tree to represent point body or centre of mass clusters of point bodies
@@ -58,29 +61,26 @@ class System {
 	   *	
 	   *	This will create the 3d Barnes-Hutt tree each calculation of the forces during an iteration of the Verlet algorithm.
 	   */
-		Body* addBarnesHutt(Body* body, Body* node = NULL){
+		Body* addBarnesHutt(Body* body, Body* node){
 			cout <<"\n\n---------------------------------------\nbody: "<<body << "\n" ;
 			(*body).print() ;
 			cout << "node: "<< node<< "\n";
  			//(*node).print();	
+			Body *newNode = new Body;//the default return if the node is null
 
-			//Insertion of the body into the newNode if the node doesn't exist
-			if(node == NULL){
-				cout << "\nnode is null, adding body to null node\n";
-				node= body;//base case
-				cout << "node now is: " <<node <<"\n";
-			}else{ //the node exists already
-				cout<<"\nnode exists, adding body to subnode\n";
 
-					//Determine if the node is internal or external, this is the only case in the program since instantiation, addition of a subnode, or a reset of the Barnes Hutt tree where this value should change
+			if(node!=NULL) { //the node exists already
+				newNode = node;
+				//Determine if the node is internal or external, this is the only case in the program since instantiation, addition of a subnode, or a reset of the Barnes Hutt tree where this value should change
+				(*node).isExternal = true;
 				for(int i = 0 ; i< 8 ; i++){
 					if((*node).subnode[i] != NULL) {(*node).isExternal = false;}
 				}
 
-				Body *newNode = node;
+				
 
 					//If the node is external (has no subnode) then there are two bodies conflicting for the same node, they must be added as subnode to the current 
-				if((*node).isExternal && node != &head){
+				if((*node).isExternal && node != head){
 
 					Body superNode = *node;
 					newNode = &superNode;
@@ -90,17 +90,18 @@ class System {
 					(*newNode).subnode[nextOctant] = addBarnesHutt(node,superNode.subnode[nextOctant]);
 				}
 
-
 				(*newNode).mass += (*body).mass;//the mass of the system below this node increases by the body being added
 				int octant = (*body).nextOctant();//determine where the octant that the new body at this depth should be inserted
 
-				cout <<"\nadding body as subnode into octant: "<<octant<<" for node "<<  newNode << "\n";
+				cout <<"\nadding body "<<body<<" as subnode into octant: "<<octant<<" on node "<<  newNode << "\n";
 				(*newNode).subnode[octant] = addBarnesHutt(body,(*newNode).subnode[octant]); //adds the body to be a subnode of the node
 				(*newNode).updateCentreOfMass();
-				node = (*newNode).subnode[octant];
+				//newNode = (*newNode).subnode[octant];
+
+				
 			}
-			cout<<"\n==========RETURNS==========\n"<<node<<"\n==========================\n\n";
-			return node;
+			cout<<"\n==========RETURNS==========\n"<<newNode<<"\n==========================\n\n";
+			return newNode;
 		};
 		
 

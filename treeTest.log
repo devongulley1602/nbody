@@ -1,0 +1,97 @@
+
+Head: 0x55fe1a4a92b0
+
+ADDING B
+
+
+---------------------------------------
+body: 0x7ffd5d9cd4e0
+
+Memory Location: 0x7ffd5d9cd4e0
+Domain: 1
+Mass: 1
+Position: (0.1,0.1,0.9)
+Velocity: (0.05,0.05,0.05)
+
+node: 0x55fe1a4a92b0
+relativeposition[0]/domain: 0.1/0.5 = 0.2---> bit: 0
+relativeposition[1]/domain: 0.1/0.5 = 0.2---> bit: 0
+relativeposition[2]/domain: 0.4/0.5 = 0.8---> bit: 1
+
+adding body 0x7ffd5d9cd4e0 as subnode into octant: 4 on node 0x55fe1a4a92b0
+
+
+---------------------------------------
+body: 0x7ffd5d9cd4e0
+
+Memory Location: 0x7ffd5d9cd4e0
+Domain: 0.5
+Mass: 1
+Position: (0.1,0.1,0.9)
+Velocity: (0.05,0.05,0.05)
+
+node: 0
+
+==========RETURNS==========
+0x55fe1a4aa440
+==========================
+
+
+==========RETURNS==========
+0x55fe1a4a92b0
+==========================
+
+
+ADDING B1
+
+
+---------------------------------------
+body: 0x7ffd5d9cd590
+
+Memory Location: 0x7ffd5d9cd590
+Domain: 1
+Mass: 2
+Position: (0.9,0.9,0.9)
+Velocity: (0.05,0.05,0.05)
+
+node: 0x55fe1a4a92b0
+relativeposition[0]/domain: 0.4/0.5 = 0.8---> bit: 1
+relativeposition[1]/domain: 0.4/0.5 = 0.8---> bit: 1
+relativeposition[2]/domain: 0.4/0.5 = 0.8---> bit: 1
+
+adding body 0x7ffd5d9cd590 as subnode into octant: 7 on node 0x55fe1a4a92b0
+
+
+---------------------------------------
+body: 0x7ffd5d9cd590
+
+Memory Location: 0x7ffd5d9cd590
+Domain: 0.5
+Mass: 2
+Position: (0.9,0.9,0.9)
+Velocity: (0.05,0.05,0.05)
+
+node: 0
+
+==========RETURNS==========
+0x55fe1a4aa5c0
+==========================
+
+
+==========RETURNS==========
+0x55fe1a4a92b0
+==========================
+
+
+printing subnodes of h
+
+Memory Location: 0x55fe1a4aa440
+Domain: 1
+Mass: 0
+
+Memory Location: 0x55fe1a4aa5c0
+Domain: 1
+Mass: 0
+
+Exiting
+

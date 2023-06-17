@@ -18,27 +18,35 @@ double ranDouble(){
 int main (){
 
 	
-	double pos[3] = {0.5,0.5,0.5};
+	double pos[3] = {0.1,0.1,0.1};
 	double vel[3] = {0.05,0.05,0.05};
 
 	Body b = Body(1,pos,vel);
 	Body b1 = Body(2,pos,vel);
+
+	b.position[0] = 0.1;
+	b.position[1] = 0.1;
+	b.position[2] = 0.9;
 	
-	b1.position[1] = 0.4;
-	b1.position[2] = 0.4;
+	b1.position[0] = 0.9;
+	b1.position[1] = 0.9;
+	b1.position[2] = 0.9;
 
 	
 	System s = System();
-	Body* h = &s.head;
-(*h).print();
-	s.addBarnesHutt(&b,h);
-	s.addBarnesHutt(&b1,h);
+	Body* h;
 	
+	h = s.head;
+	cout<<"\nHead: "<< h <<"\n";		
+	cout<<"\nADDING B\n";
+	s.add(b);
+	cout<<"\nADDING B1\n";
+	s.add(b1);
 	
 	cout << "\nprinting subnodes of h\n";
 	for(int i = 0 ; i<8; i++){
 		if((*h).subnode[i]!= NULL){
-			(*s.head.subnode[i]).print();	
+			(*(*h).subnode[i]).print();	
 		}
 	}
 
@@ -54,7 +62,6 @@ int main (){
 */
 
 
-	cout <<"\n\n\nSanity check (head domain should  == 1) head domain: " << (*h).Domain();
 /*	s.addBarnesHutt(&b1);
 	b.print();
 	b1.print();
@@ -88,7 +95,7 @@ int main (){
 
 */
 	
-
+	cout<<"\nExiting\n";
 	return 0;
 };
 
