@@ -41,6 +41,7 @@ class System {
 		System (double _theta=0.5){
 			theta = _theta;
 			head = new Body;
+			(*head).isExternal = false;
 		};
 
 		void add(Body &body){
@@ -61,21 +62,23 @@ class System {
 	   *	
 	   *	This will create the 3d Barnes-Hutt tree each calculation of the forces during an iteration of the Verlet algorithm.
 	   */
-		Body* addBarnesHutt(Body* body, Body* node){
-			cout <<"\n\n---------------------------------------\nbody: "<<body << "\n" ;
+		Body* addBarnesHutt(Body* body, Body* node = NULL){
+		/*	out <<"\n\n---------------------------------------\nbody: "<<body << "\n" ;
 			(*body).print() ;
 			cout << "node: "<< node<< "\n";
  			//(*node).print();	
-			Body *newNode = new Body;//the default return if the node is null
+			Body *newNode = new Body;//the return value of the node
 
 
 			if(node!=NULL) { //the node exists already
 				newNode = node;
+			
 				//Determine if the node is internal or external, this is the only case in the program since instantiation, addition of a subnode, or a reset of the Barnes Hutt tree where this value should change
 				(*node).isExternal = true;
 				for(int i = 0 ; i< 8 ; i++){
 					if((*node).subnode[i] != NULL) {(*node).isExternal = false;}
 				}
+			
 
 				
 
@@ -88,7 +91,9 @@ class System {
 					
 					cout<<"\nnode is external and also a body, creating new node and adding that to octant: "<< nextOctant<< " as well\n";
 					(*newNode).subnode[nextOctant] = addBarnesHutt(node,superNode.subnode[nextOctant]);
+					(*newNode).updateCentreOfMass();	
 				}
+			}
 
 				(*newNode).mass += (*body).mass;//the mass of the system below this node increases by the body being added
 				int octant = (*body).nextOctant();//determine where the octant that the new body at this depth should be inserted
@@ -99,9 +104,80 @@ class System {
 				//newNode = (*newNode).subnode[octant];
 
 				
-			}
+			
 			cout<<"\n==========RETURNS==========\n"<<newNode<<"\n==========================\n\n";
 			return newNode;
+			*/
+			
+			//Body *returnNode = new Body;//newNode is the address of the body that will be returned on this layer
+			
+			cout <<"\n\n---------------------------------------\nbody: "<<body << "\n" ;
+			(*body).print() ;
+			cout << "node: "<< node<< "\n";	
+
+
+
+
+			if(node == NULL) {
+				return body;//returns the body inserted at a specific octant
+			}else{//the node exists 
+
+				//check if the node is external - this code may not be necessary
+			//	(*node).isExternal = true;
+			//	for(int i = 0 ; i< 8 ; i++){
+			//		if((*node).subnode[i] != NULL) {(*node).isExternal = false;}
+			//	}
+			
+
+
+
+
+				if ((*node).isExternal){ //if the node is external, two bodies now compete for the position on the tree tip
+					
+					//a superNode is created which they both will be subnodes of
+					Body *superNode = new Body;		
+
+					//insertion of the first (newest) of the now conflicting bodies
+					int	next  = (*body).nextOctant();
+					(*superNode).subnode[next] = body; 
+				
+
+					cout<<"\nnode is external and also a body, creating new node and adding body to octant: "<< next <<"\n";
+
+
+
+					//resinsertion of the original of the conflicting bodies
+					next = (*node).nextOctant();
+					cout << "\nas well as the conflicting original node to octant: " << next << "\n";
+					(*superNode).subnode[next] = addBarnesHutt(node,((*superNode).subnode[next]));
+					
+					(*superNode).isExternal = false;
+					(*superNode).mass = (*body).mass + (*node).mass;
+					(*superNode).updateCentreOfMass();
+					return superNode;
+					
+				
+				}else{//if the node where the body is being added to is internal
+					
+					//determine which octant the body should be inserted into
+					int next = (*body).nextOctant();
+
+					cout << "\nAdding " << body << " to internal node " << node << " on octant "<< next;
+					(*node).subnode[next] = addBarnesHutt(body,(*node).subnode[next]);
+					(*node).isExternal = false; 
+					(*node).mass += (*body).mass;
+					(*node).updateCentreOfMass();
+					return node;
+				}
+				
+
+			}
+			
+
+
+
+
+			//return returnNode;
 		};
 		
 

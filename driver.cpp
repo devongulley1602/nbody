@@ -26,7 +26,7 @@ int main (){
 
 	b.position[0] = 0.1;
 	b.position[1] = 0.1;
-	b.position[2] = 0.9;
+	b.position[2] = 0.1;
 	
 	b1.position[0] = 0.9;
 	b1.position[1] = 0.9;
@@ -49,6 +49,7 @@ int main (){
 			(*(*h).subnode[i]).print();	
 		}
 	}
+	cout<<"\nTotal mass of system: "<< (*h).mass;
 
 
 /*	
