@@ -44,7 +44,6 @@
  * Sends key statistics to std::cout regarding properties of the body
  */
 
-
 #include <iostream>
 #include <cmath>
 using namespace std;
