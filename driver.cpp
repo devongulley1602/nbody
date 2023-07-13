@@ -12,6 +12,7 @@
 #include "system.h"
 #include <stdlib.h> 
 #include <cstdio>
+
 double ranDouble(){
 	return (double) rand()/RAND_MAX;
 }
@@ -41,10 +42,10 @@ int main (){
 	srand(0);
 	
 	//creating the initial state of the system
-	int numBodies = 100;
+	int numBodies = 1000;
 
 	//creating an array to keep track of the bodies in memory
-	Body* bodies = new Body[100];
+	Body* bodies = new Body[numBodies];
 
 	//uniform masssed particles
 	double m = 1.0;
@@ -86,16 +87,81 @@ int main (){
 
 	//With each body and its properties created, they can now be added to the system	
 	System s = System();
-	Body* head = s.head;
 
 	for(int i = 0; i<numBodies;i++){
 		s.add(bodies[i]);
 	}
 	
-	//The system is now created and populated with the bodies
+	
+	//Change stdout back to terminal
+	freopen ("/dev/tty", "a", stdout);
+	
+	/*
+	 * The system is now created and populated with the bodies
+	 * It can now be evolved in time with the Verlet alogorithm
+	 *
+	 */
+	cout << "\nSolving...\n";
+	
+	double dt = 0.001; //the time step in which the system advances by
+	int maxSteps = 1000;//the total number of steps that the driver will simulate for
+	double progressBar = 0;
+	
+	for (int i = 0; i<maxSteps; i++){//the ordering of the bodies in the array may have an effect on the system evolution
+		
+		//Calulation of the force on each body j, then adjusting its velocity and position
+		for (int j = 0; j<numBodies ; j++){
+			//Calculate the force exerted on body[j]
+			double F[3] = {0,0,0};
+			s.calculateForces(bodies[j],*s.head,F);
+			//The force F on body j has been solved for, now to calculate the motion 
+			
+			double m = bodies[j].mass;
+			double a[3] = {F[0]/m,F[1]/m,F[2]/m};//the acceleration of the body
+			
 
+			//Discrete kinematic approximations
+			//v+=a*dt
+			//x+=v*dt
+			for( int k = 0; k < 3; k++){
+				bodies[j].velocity[k] += a[k]*dt;
+				bodies[j].position[k] += bodies[j].velocity[k]*dt;
+			}
+
+		}
+		
+		//Keeping track of the progress of the program solving this 
+		double progress = (((double)(i+1))/maxSteps)*100;
+		if (progressBar < progress ){
+			system("clear");
+			progressBar += 4;
+			double width=73;
+			string progressString = " [";
+			if(progressBar < 100){
+				for (int p = 0; p< width; p++){
+					if(p<(progress/100)*width){
+						progressString +="#";
+					}else{
+						progressString += " ";
+					}
+				}
+				progressString += "]";
+				cout<<  progressBar<<" "<<progressString <<"%"<< "\n"; 
+			}else{
+				progressString = "[";	
+				for (int p = 0; p < width - 1; p++){
+					progressString += "#";	
+				}
+				progressString += "]";
+				cout << "100% " << progressString <<"\n";
+			}
+		}
+	}
 
 	
+	//Clean up and ending simulation
+	printf("\nComplete\n");
+	delete[] bodies;
 	return 0;
 };
 
