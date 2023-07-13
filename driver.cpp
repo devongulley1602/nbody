@@ -9,6 +9,7 @@
  *
  */
 #include <cmath>
+#include <fstream>
 #include "system.h"
 #include <stdlib.h> 
 #include <cstdio>
@@ -47,14 +48,17 @@ int main (){
 	//creating an array to keep track of the bodies in memory
 	Body* bodies = new Body[numBodies];
 
-	//uniform masssed particles
+	//uniform masssed particles in this example
 	double m = 1.0;
 	
-	//the total mass of the system
+	//the total mass of the system in this example
 	double M = m*numBodies;
-
+	
+	//arbitrarily chosen gravitational constant
 	double G = 6.6743*pow(10,-11);
 
+
+	//Generating the traits of each body for the system
 	for (int i = 0; i< numBodies ; i++){
 		
 		//Creating the coordinates of the distribution (r,theta,phi) of a given body 
@@ -102,8 +106,22 @@ int main (){
 	 *
 	 */
 	cout << "\nSolving...\n";
+
 	
-	double dt = 0.001; //the time step in which the system advances by
+	//To out.sys is to output the data to a readable source that can be graphed later
+	std::ofstream out;
+	out.open("out.sys");//delimeters ",;\n" for position, body, system state at a given time
+	
+	/* Output will be in the following form for two consecutive instants in time of 3 objects
+	 * 
+	 * out.sys:
+	 * x1,y1,z1;x2,y2,z2;x3,y3,z3
+	 * x1,y1,z1;x2,y2,z2;x3,y3,z3
+	 *
+	 */
+
+
+	double dt = 0.0001; //the time step in which the system advances by
 	int maxSteps = 1000;//the total number of steps that the driver will simulate for
 	double progressBar = 0;
 	
@@ -120,14 +138,20 @@ int main (){
 			double a[3] = {F[0]/m,F[1]/m,F[2]/m};//the acceleration of the body
 			
 
-			//Discrete kinematic approximations
-			//v+=a*dt
-			//x+=v*dt
+			/* Discrete kinematic approximations
+			 *
+			 * v+=a*dt
+			 * x+=v*dt
+			 *
+			 */
 			for( int k = 0; k < 3; k++){
+				//Calculating the position and velocity of body j along dimension k
 				bodies[j].velocity[k] += a[k]*dt;
-				bodies[j].position[k] += bodies[j].velocity[k]*dt;
+				bodies[j].position[k] += bodies[j].velocity[k]*dt;	
 			}
 
+				//Output to record the position of the body j
+				out << bodies[j].position[0] <<","<<bodies[j].position[1] << "," << bodies[j].position[2] << ";";
 		}
 		
 		//Keeping track of the progress of the program solving this 
@@ -156,10 +180,12 @@ int main (){
 				cout << "100% " << progressString <<"\n";
 			}
 		}
+		out << "\n";// record the state of the system for the next time step
 	}
 
 	
 	//Clean up and ending simulation
+	out.close();
 	printf("\nComplete\n");
 	delete[] bodies;
 	return 0;
