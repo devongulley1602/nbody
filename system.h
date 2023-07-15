@@ -63,57 +63,10 @@ class System {
 	   *	This will create the 3d Barnes-Hutt tree each calculation of the forces during an iteration of the Verlet algorithm.
 	   */
 		Body* addBarnesHutt(Body* body, Body* node = NULL){
-		/*	out <<"\n\n---------------------------------------\nbody: "<<body << "\n" ;
-			(*body).print() ;
-			cout << "node: "<< node<< "\n";
- 			//(*node).print();	
-			Body *newNode = new Body;//the return value of the node
-
-
-			if(node!=NULL) { //the node exists already
-				newNode = node;
 			
-				//Determine if the node is internal or external, this is the only case in the program since instantiation, addition of a subnode, or a reset of the Barnes Hutt tree where this value should change
-				(*node).isExternal = true;
-				for(int i = 0 ; i< 8 ; i++){
-					if((*node).subnode[i] != NULL) {(*node).isExternal = false;}
-				}
-			
-
-				
-
-					//If the node is external (has no subnode) then there are two bodies conflicting for the same node, they must be added as subnode to the current 
-				if((*node).isExternal && node != head){
-
-					Body superNode = *node;
-					newNode = &superNode;
-					int nextOctant = (*node).nextOctant();
-					
-					cout<<"\nnode is external and also a body, creating new node and adding that to octant: "<< nextOctant<< " as well\n";
-					(*newNode).subnode[nextOctant] = addBarnesHutt(node,superNode.subnode[nextOctant]);
-					(*newNode).updateCentreOfMass();	
-				}
-			}
-
-				(*newNode).mass += (*body).mass;//the mass of the system below this node increases by the body being added
-				int octant = (*body).nextOctant();//determine where the octant that the new body at this depth should be inserted
-
-				cout <<"\nadding body "<<body<<" as subnode into octant: "<<octant<<" on node "<<  newNode << "\n";
-				(*newNode).subnode[octant] = addBarnesHutt(body,(*newNode).subnode[octant]); //adds the body to be a subnode of the node
-				(*newNode).updateCentreOfMass();
-				//newNode = (*newNode).subnode[octant];
-
-				
-			
-			cout<<"\n==========RETURNS==========\n"<<newNode<<"\n==========================\n\n";
-			return newNode;
-			*/
-			
-			//Body *returnNode = new Body;//newNode is the address of the body that will be returned on this layer
-			
-			cout <<"\n\n---------------------------------------\nbody: "<<body << "\n" ;
-			(*body).print() ;
-			cout << "node: "<< node<< "\n";	
+			//cout <<"\n\n---------------------------------------\nbody: "<<body << "\n" ;
+			//(*body).print() ;
+			//cout << "node: "<< node<< "\n";	
 
 
 
@@ -121,16 +74,6 @@ class System {
 			if(node == NULL) {
 				return body;//returns the body inserted at a specific octant
 			}else{//the node exists 
-
-				//check if the node is external - this code may not be necessary
-			//	(*node).isExternal = true;
-			//	for(int i = 0 ; i< 8 ; i++){
-			//		if((*node).subnode[i] != NULL) {(*node).isExternal = false;}
-			//	}
-			
-
-
-
 
 				if ((*node).isExternal){ //if the node is external, two bodies now compete for the position on the tree tip
 					
@@ -142,13 +85,13 @@ class System {
 					(*superNode).subnode[next] = body; 
 				
 
-					cout<<"\nnode is external and also a body, creating new node and adding body to octant: "<< next <<"\n";
+					//cout<<"\nnode is external and also a body, creating new node and adding body to octant: "<< next <<"\n";
 
 
 
 					//resinsertion of the original of the conflicting bodies
 					next = (*node).nextOctant();
-					cout << "\nas well as the conflicting original node to octant: " << next << "\n";
+					//cout << "\nas well as the conflicting original node to octant: " << next << "\n";
 					(*superNode).subnode[next] = addBarnesHutt(node,((*superNode).subnode[next]));
 					
 					(*superNode).isExternal = false;
@@ -162,7 +105,7 @@ class System {
 					//determine which octant the body should be inserted into
 					int next = (*body).nextOctant();
 
-					cout << "\nAdding " << body << " to internal node " << node << " on octant "<< next;
+					//cout << "\nAdding " << body << " to internal node " << node << " on octant "<< next;
 					(*node).subnode[next] = addBarnesHutt(body,(*node).subnode[next]);
 					(*node).isExternal = false; 
 					(*node).mass += (*body).mass;
@@ -172,11 +115,6 @@ class System {
 				
 
 			}
-			
-
-
-
-
 			//return returnNode;
 		};
 		
@@ -197,18 +135,22 @@ class System {
 			
 			//Calculate the force exerted below the node and store the result by reference in F_ab 
 			double F_ab[3] = {0,0,0};
-
+			
+			if(&body != &node || &body==head){
+				
 			//The node's position can be used if it's external OR it's internal but sufficiently far from the body (the theta criterion)
-			if(node.isExternal ||( (node.Domain()*node.Domain()< theta*node.distanceSquaredTo(body))) ){
-				node.forceOn(body,F_ab);
-			}else{//The default recursive body force pair computation
-				for (int i = 0 ; i < 8 ; i++){
-					if (node.subnode[i] != NULL){//if anything can be parallelised easily, it's this
-						(*node.subnode[i]).forceOn(body,F_ab);//recursively determine the contribution of the force from each subnode onto the body
+				if(node.isExternal ||( (node.Domain()*node.Domain()< theta*node.distanceSquaredTo(body)))){
+					body.forceFrom(node,F_ab);
+				}else{//The default recursive body force pair computation
+					for (int i = 0 ; i < 8 ; i++){
+						if (node.subnode[i] != NULL){//if anything can be parallelised easily, it's this
+					//	(*node.subnode[i]).forceOn(body,F_ab);//recursively determine the contribution of the force from each subnode onto the body
+							calculateForces(body,*node.subnode[i],F_ab);
+
+						}
 					}
 				}
 			}
-
 			//To return the sum of the forces from each contribution
 			for (int i = 0 ; i < 3 ; i++){
 				F[i] += F_ab[i];

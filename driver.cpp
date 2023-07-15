@@ -22,7 +22,7 @@ double initialRadiusSample(){
 	//B is the maximum cutoff of the distribution, r_i is the inner radius where 1/e particles would be outside of without cutoff
 	//-ln|u*r_i|*r_i where random variable u is an element of (exp(-B/r_i)/r_i,1/r_i)	
 	double B = 0.25;
-	double r_i = 0.05;
+	double r_i = 0.015;
 
 	double u = exp(-1*B/r_i) + ranDouble()/r_i;
 	return -1*log(u*r_i)*r_i;
@@ -43,7 +43,7 @@ int main (){
 	srand(0);
 	
 	//creating the initial state of the system
-	int numBodies = 1000;
+	int numBodies =10;
 
 	//creating an array to keep track of the bodies in memory
 	Body* bodies = new Body[numBodies];
@@ -55,7 +55,7 @@ int main (){
 	double M = m*numBodies;
 	
 	//arbitrarily chosen gravitational constant
-	double G = 6.6743*pow(10,-11);
+	double G =6.6743*pow(10,-11);
 
 
 	//Generating the traits of each body for the system
@@ -76,24 +76,27 @@ int main (){
 		double v = sqrt(2*G*M/r);
 		
 		//distributing this for x and y velocities (0 initially in z direction for this system)
-		double v_x = -v*cos(theta);
+		double v_x = v*cos(theta);
 		double v_y = v*sin(theta);
 		double v_z = 0;	
-
+		
 		//The parameters of the body have been set, now to apply them to the object and add them to the array
 		double pos[3] = {x,y,z};
 		double vel[3] = {v_x,v_y,v_z};
-	
+		
+
+
+
 		Body b = Body(m,pos,vel);
 		bodies[i] = b;	
 	}
-
 
 	//With each body and its properties created, they can now be added to the system	
 	System s = System();
 
 	for(int i = 0; i<numBodies;i++){
 		s.add(bodies[i]);
+
 	}
 	
 	
@@ -120,9 +123,10 @@ int main (){
 	 *
 	 */
 
-
-	double dt = 0.0001; //the time step in which the system advances by
-	int maxSteps = 1000;//the total number of steps that the driver will simulate for
+	double dt = 0.001; //the time step in which the system advances by
+	int maxSteps = 10000;//the total number of steps that the driver will simulate for
+	int frames = 1000;
+	int frameStep = maxSteps/frames;//every nth framestep the position values will be put in out.sys
 	double progressBar = 0;
 	
 	for (int i = 0; i<maxSteps; i++){//the ordering of the bodies in the array may have an effect on the system evolution
@@ -133,9 +137,15 @@ int main (){
 			double F[3] = {0,0,0};
 			s.calculateForces(bodies[j],*s.head,F);
 			//The force F on body j has been solved for, now to calculate the motion 
-			
+				
 			double m = bodies[j].mass;
-			double a[3] = {F[0]/m,F[1]/m,F[2]/m};//the acceleration of the body
+			double a[3] = {G*F[0]/m,G*F[1]/m,G*F[2]/m};//the acceleration of the body
+
+
+			if(isnan(a[0]) || isnan(a[1]) || isnan(a[2])){
+				cerr << "\nForces to strong for double precision; consider a larger global cutoffDistance in body.h";
+				return -1;
+			}
 			
 
 			/* Discrete kinematic approximations
@@ -151,7 +161,9 @@ int main (){
 			}
 
 				//Output to record the position of the body j
-				out << bodies[j].position[0] <<","<<bodies[j].position[1] << "," << bodies[j].position[2] << ";";
+			if(i%frameStep==0){
+						out << bodies[j].position[0] <<","<<bodies[j].position[1] << "," << bodies[j].position[2] << ";";
+			}
 		}
 		
 		//Keeping track of the progress of the program solving this 
@@ -170,17 +182,19 @@ int main (){
 					}
 				}
 				progressString += "]";
-				cout<<  progressBar<<" "<<progressString <<"%"<< "\n"; 
+				cout<< progressString << progressBar <<"%\n"; 
 			}else{
 				progressString = "[";	
 				for (int p = 0; p < width - 1; p++){
 					progressString += "#";	
 				}
 				progressString += "]";
-				cout << "100% " << progressString <<"\n";
+				cout << progressString <<"100%\n";
 			}
 		}
-		out << "\n";// record the state of the system for the next time step
+		if(i%frameStep==0){
+			out << "\n";// record the state of the system for the next time step
+		}
 	}
 
 	

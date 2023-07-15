@@ -196,10 +196,16 @@ class Body {
 		 * @params b
 		 * @params F[3]	
 		 */ 
-		void forceOn(Body b,double (&F)[3]){//a proportional force which the program driver can scale appropriately
-			for (int i = 0; i<3; i++){
-				//the force projection onto each axis
-				F[i] =((position[i]-b.position[i])*mass*b.mass)/(distanceSquaredTo(b)*pow(distanceSquaredTo(b),0.5));
+		void forceFrom(Body b,double (&F)[3]){//a proportional force which the program driver can scale appropriately
+			if(distanceSquaredTo(b) > cutoffDistance*cutoffDistance){
+				for (int i = 0; i<3; i++){
+					//the force projection onto each axis
+					F[i] =((b.position[i]-position[i])*mass*b.mass)/(distanceSquaredTo(b)*pow(distanceSquaredTo(b),0.5));
+				}
+			}else{
+				F[0] = 0;
+				F[1] = 0;
+				F[2] = 0;
 			}
 		}
 		
@@ -230,7 +236,7 @@ class Body {
 				double bit = (relativePosition[i]/domain > 1);
 				relativePosition[i] -= bit*domain;
 				octantIndex += bit *pow(2,i); //the octant from 0 to 7 corresponding to if the relativePosition is greater or less than 1 on half of the new 
-				cout<< "relativeposition["<<i<<"]/domain: "<<relativePosition[i]<<"/"<<domain<<" = "<< relativePosition[i]/domain<< "---> bit: "<<bit<< "\n";
+				//cout<< "relativeposition["<<i<<"]/domain: "<<relativePosition[i]<<"/"<<domain<<" = "<< relativePosition[i]/domain<< "---> bit: "<<bit<< "\n";
 			}
 			//cout<<"\nOCTANTINDEX: " << octantIndex;
 			return octantIndex;
@@ -253,7 +259,7 @@ class Body {
 		void print() {
 			cout << "\nMemory Location: " << this;
 			cout << "\nDomain: " << domain << "\n";
-			if(position[1] && velocity[1]){
+			if(velocity[1]){
 				cout << "Mass: "<< mass << "\nPosition: ("<<position[0]<<","<< position[1]<< "," << position[2] << ")\nVelocity: ("<<velocity[0]<<","<< velocity[1]<< "," << velocity[2] << ")\n\n";
 			}else{
 				cout <<"Mass: " <<mass<<"\n";
